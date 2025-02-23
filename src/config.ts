@@ -1,4 +1,3 @@
-const canvas = document.querySelector(".canvas");
 interface Config {
   windowHeight: number;
   windowWidth: number;
@@ -7,7 +6,7 @@ interface Config {
   scaleFactor: number;
 }
 
-function config(): Config {
+function initConfig(): Config {
   const myConf: Config = {
     windowHeight: 64,
     windowWidth: 32,
@@ -18,10 +17,4 @@ function config(): Config {
   return myConf;
 }
 
-function main() {
-  const myConf: Config = config();
-
-  return 0;
-}
-
-main();
+export { initConfig, type Config };
