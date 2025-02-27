@@ -1,3 +1,4 @@
+import { FONT } from "./constants.js";
 enum Chip8State {
   Quit,
   Paused,
@@ -14,9 +15,9 @@ enum Chip8State {
 //}
 
 interface Machine {
-  ram: ArrayBuffer; // array of 4096 bytes
+  ram: Uint8Array; // array of 4096 bytes
   display: boolean[][]; // 64 by 32 array where each pixel is on or off
-  stack: ArrayBuffer; // stack of size 12 whaere each rlment is 16 bytes
+  stack: Uint16Array; // stack of size 12 whaere each rlment is 16 bytes
   pc: number; // 16 bit program counter
   delayTimer: number; // 8 bit delay timer
   soundTimer: number; // an 8 bit sound timer
@@ -49,6 +50,17 @@ class Chip8 {
       stackPtr: -1
     };
   }
+
+  load() {
+    // load the font on to memory (0x00 till 0x200 permitted)
+    for (let i = 0; i < FONT.length; i++) {
+      const element: number | undefined = FONT[i];
+      if (!element) continue; // ts stuff
+      this.machine.ram[i] = element;
+    }
+  }
+
+  emulate_instruction() {}
 }
 
 export { Chip8State, Chip8 };

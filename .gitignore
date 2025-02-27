@@ -1,2 +1,4 @@
 dist
 node_modules
+rom
+tsconfig.tsbuildinfo
