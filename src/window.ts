@@ -13,6 +13,8 @@ class Window {
     }
     this.canvas.width = this.width = conf.windowWidth * conf.scaleFactor;
     this.canvas.height = this.height = conf.windowHeight * conf.scaleFactor;
+    //this.canvas.width = this.width = window.innerWidth;
+    //this.canvas.height = this.height = window.innerHeight;
     this.ctx = this.canvas!.getContext("2d");
   }
 
@@ -21,7 +23,7 @@ class Window {
     this.ctx!.fillRect(0, 0, this.width, this.height);
   }
 
-  handle_input() {
+  handleInput() {
     // add actual input event triggers
     while (true) {}
   }

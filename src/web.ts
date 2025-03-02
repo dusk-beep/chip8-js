@@ -1,8 +1,8 @@
 import { main } from "./main.js";
 
-async function loadrom(event: Event) {
-  if (!event.target) return;
-  const rom = event.currentTarget;
+async function loadrom() {
+  const rom = (<HTMLSelectElement>document.getElementById("select")).value;
+
   try {
     const resp = await fetch(`./rom/${rom}`);
     const arrayBuffer = await resp.arrayBuffer();

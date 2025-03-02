@@ -9,17 +9,36 @@ function main(arrBuf: ArrayBuffer): number {
 
   const uint8View = new Uint8Array(arrBuf);
   const romData = new Romdata(uint8View); // data contains decoded big endian bytes of instruvtions
-  //console.log(romData.data); // note could be broken
+  console.log(romData.dump()); // note could be broken
 
   const win = new Window(myConf); // could throw error
   win.clear(myConf);
-  const chip8 = new Chip8(Chip8State.Running);
+  const chip8 = new Chip8(Chip8State.Running, myConf, win);
   chip8.load(romData);
+  chip8.draw();
+  chip8.emulate_instruction();
+  chip8.draw();
+  chip8.emulate_instruction();
+  chip8.draw();
+  chip8.emulate_instruction();
+  chip8.draw();
+  chip8.emulate_instruction();
+  chip8.draw();
+  chip8.emulate_instruction(); // should draw
+  chip8.draw();
+  chip8.emulate_instruction();
 
-  //while (chip8.state == Chip8State.Running) {
+  //while (chip8.state != Chip8State.Quit) {
   //  //window.handle_input();
-  //  sleep(16);
+  //  try {
+  //    chip8.emulate_instruction();
+  //  } catch (error) {
+  //    console.log(error);
+  //  }
+  //  //sleep(16);
+  //  //chip8.draw();
   //}
+
   return 0;
 }
 

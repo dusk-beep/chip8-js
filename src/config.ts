@@ -10,9 +10,9 @@ function initConfig(): Config {
   const myConf: Config = {
     windowHeight: 64,
     windowWidth: 32,
-    forgroundColor: "#33ff66", // green
+    forgroundColor: "white", // green #33ff66
     backgroundColor: "#000000", // black
-    scaleFactor: 10
+    scaleFactor: 5
   };
   return myConf;
 }
