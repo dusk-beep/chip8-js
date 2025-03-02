@@ -5,10 +5,18 @@
 }
 
 body {
-  width:100%
+  height: 100vh;
+  background-color: dodgerblue; /* Optional */
 }
 
 canvas {
-  width: 100%;
-  height: 100%;
+  display: block; /* Removes extra spacing */
+  image-rendering: pixelated; /* Prevents blurriness when scaled */
+  border: 1px solid white;
+  width: auto;
+  height: auto;
+}
+
+select {
+  display: inline-block;
 }

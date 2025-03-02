@@ -11,8 +11,8 @@ function initConfig(): Config {
     windowHeight: 64,
     windowWidth: 32,
     forgroundColor: "white", // green #33ff66
-    backgroundColor: "#000000", // black
-    scaleFactor: 5
+    backgroundColor: "black", // black
+    scaleFactor: 10
   };
   return myConf;
 }

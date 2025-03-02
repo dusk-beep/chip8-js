@@ -13,6 +13,8 @@ async function loadrom() {
   }
 }
 
+console.log("emtry");
+
 const selected = document.querySelector("select");
 if (!selected) throw Error("no rom selected");
 selected.addEventListener("change", loadrom);

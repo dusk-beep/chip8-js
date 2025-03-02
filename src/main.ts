@@ -12,33 +12,33 @@ function main(arrBuf: ArrayBuffer): number {
   console.log(romData.dump()); // note could be broken
 
   const win = new Window(myConf); // could throw error
-  win.clear(myConf);
   const chip8 = new Chip8(Chip8State.Running, myConf, win);
   chip8.load(romData);
-  chip8.draw();
-  chip8.emulate_instruction();
-  chip8.draw();
-  chip8.emulate_instruction();
-  chip8.draw();
-  chip8.emulate_instruction();
-  chip8.draw();
-  chip8.emulate_instruction();
-  chip8.draw();
-  chip8.emulate_instruction(); // should draw
-  chip8.draw();
-  chip8.emulate_instruction();
 
   //while (chip8.state != Chip8State.Quit) {
-  //  //window.handle_input();
   //  try {
   //    chip8.emulate_instruction();
   //  } catch (error) {
   //    console.log(error);
+  //    chip8.state = Chip8State.Quit;
   //  }
-  //  //sleep(16);
-  //  //chip8.draw();
+  //  chip8.draw();
   //}
 
+  function emuLoop() {
+    if (chip8.state != Chip8State.Quit) {
+      try {
+        chip8.emulate_instruction();
+      } catch (error) {
+        console.log(error);
+      }
+      chip8.draw();
+      //requestAnimationFrame(emuLoop);
+    }
+    setTimeout(emuLoop, 3);
+  }
+
+  emuLoop();
   return 0;
 }
 

@@ -72,34 +72,66 @@ class Chip8 {
     this.config = cfg;
   }
 
-  draw() {
-    const width = this.config.windowWidth;
-    //const height = this.config.windowHeight;
-    const scaleFactor = this.config.scaleFactor;
+  //draw2() {
+  //  const width = this.config.windowWidth;
+  //  const scaleFactor = this.config.scaleFactor;
+  //
+  //  this.win.ctx!.fillStyle = "black";
+  //  this.win.ctx!.fillRect(0, 0, width, this.win.height);
+  //
+  //  const rect = {
+  //    x: 0,
+  //    y: 0,
+  //    w: scaleFactor,
+  //    h: scaleFactor
+  //  };
+  //  // loop over the display array and if it is on draw
+  //  for (let i = 0; i < this.machine.display.length; i++) {
+  //    // Translate 1D index i value to 2D X/Y coordinates
+  //    // X = i % window width
+  //    // Y = i / window width note: should be integer
+  //    //
+  //    // scaleFactor due to remember 0 and 1
+  //    rect.x = (i % width) * scaleFactor;
+  //    rect.y = Math.floor(i / width) * scaleFactor;
+  //
+  //    // if the pixel is on then draw forground color
+  //    if (this.machine.display[i]) {
+  //      this.win.ctx!.fillStyle = this.config.forgroundColor;
+  //    } else {
+  //      this.win.ctx!.fillStyle = this.config.backgroundColor;
+  //    }
+  //    this.win.ctx!.fillRect(rect.x, rect.y, rect.w, rect.h);
+  //  }
+  //}
 
-    const rect = {
-      x: 0,
-      y: 0,
-      w: scaleFactor,
-      h: scaleFactor
-    };
-    // loop over the display array and if it is on draw
+  draw() {
+    const {
+      windowWidth: width,
+      windowHeight: height,
+      scaleFactor,
+      forgroundColor,
+      backgroundColor
+    } = this.config;
+    const ctx = this.win.ctx!;
+
+    // Clear the canvas before drawing
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, width * scaleFactor, height * scaleFactor);
+
+    // Draw pixels
     for (let i = 0; i < this.machine.display.length; i++) {
       // Translate 1D index i value to 2D X/Y coordinates
       // X = i % window width
       // Y = i / window width note: should be integer
-      //
-      // scaleFactor due to remember 0 and 1
-      rect.x = (i % width) * scaleFactor;
-      rect.y = Math.floor(i / width) * scaleFactor;
+      const x = (i % width) * scaleFactor;
+      const y = Math.floor(i / width) * scaleFactor;
 
       // if the pixel is on then draw forground color
       if (this.machine.display[i]) {
-        this.win.ctx!.fillStyle = this.config.forgroundColor;
-      } else {
-        this.win.ctx!.fillStyle = this.config.backgroundColor;
+        ctx.fillStyle = forgroundColor;
+        ctx.fillRect(x, y, scaleFactor, scaleFactor);
       }
-      this.win.ctx!.fillRect(rect.x, rect.y, rect.w, rect.h);
     }
   }
 
@@ -126,14 +158,21 @@ class Chip8 {
     this.machine.pc = this.entryPoint; // ie 0x200
   }
 
+  debug() {
+    console.log(
+      `${this.machine.pc.toString(16)} : ${this.inst.opcode.toString(16)}`
+    );
+  }
+
   emulate_instruction() {
     // FFFF
     // 1NNN
 
     this.inst.opcode = this._fetch();
-    console.log(this.inst.opcode.toString(16));
+
     // pre increment pc for the next instruction
     this._increment_pc();
+    this.debug();
 
     //fill out the current instruction format
     this.inst.NNN = this.inst.opcode & 0x0fff; // last 12 bits
@@ -143,6 +182,7 @@ class Chip8 {
     this.inst.Y = (this.inst.opcode >> 4) & 0x0f; // shift by 4 and get the last 4 bits
 
     // get the msb 4 bits
+    // emulate the opcode
     switch ((this.inst.opcode >> 12) & 0x0f) {
       case 0x00:
         // clear the screen
@@ -189,7 +229,7 @@ class Chip8 {
           const spriteData = this.machine.ram[this.machine.I + i];
           xCoord = orgX;
 
-          for (let j = 0; j < 8; j++) {
+          for (let j = 7; j >= 0; j--) {
             // 1d to 2d mapping
             // since the display is a one dimensional flattedned array
             const pixel: boolean =
@@ -224,6 +264,10 @@ class Chip8 {
 
       default:
         this.state = Chip8State.Quit;
+        console.log(
+          "Setting state to Quit due to unimplemented opcode: ",
+          this.inst.opcode.toString(16)
+        );
         throw new Error("unimplemented opcode");
     }
   }
