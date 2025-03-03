@@ -14,12 +14,6 @@ class Window {
     this.canvas.width = this.width = conf.windowWidth * conf.scaleFactor;
     this.canvas.height = this.height = conf.windowHeight * conf.scaleFactor;
 
-    console.log(
-      "Canvas width:",
-      this.canvas.width,
-      "Canvas height:",
-      this.canvas.height
-    );
     //this.canvas.width = this.width = window.innerWidth;
     //this.canvas.height = this.height = window.innerHeight;
     this.ctx = this.canvas!.getContext("2d");

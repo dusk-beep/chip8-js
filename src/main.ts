@@ -15,16 +15,6 @@ function main(arrBuf: ArrayBuffer): number {
   const chip8 = new Chip8(Chip8State.Running, myConf, win);
   chip8.load(romData);
 
-  //while (chip8.state != Chip8State.Quit) {
-  //  try {
-  //    chip8.emulate_instruction();
-  //  } catch (error) {
-  //    console.log(error);
-  //    chip8.state = Chip8State.Quit;
-  //  }
-  //  chip8.draw();
-  //}
-
   function emuLoop() {
     if (chip8.state != Chip8State.Quit) {
       try {

@@ -238,7 +238,7 @@ class Chip8 {
             // 0 or 1
             const spriteBit: number = spriteData & (1 << j) ? 1 : 0;
 
-            // is pixel is on and spritebit is also on
+            // pixel is on and spritebit is also on
             // set the caryy flag to 1
             if (pixel && spriteBit) {
               this.machine.V[0x0f] = 1;
@@ -247,7 +247,7 @@ class Chip8 {
             //this.machine.display[yCoord * this.config.windowWidth + xCoord] ^=
             //  pixel;
             this.machine.display[yCoord * this.config.windowWidth + xCoord] =
-              !!(
+              Boolean(
                 Number(
                   this.machine.display[
                     yCoord * this.config.windowWidth + xCoord

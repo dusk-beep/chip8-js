@@ -8,11 +8,11 @@ interface Config {
 
 function initConfig(): Config {
   const myConf: Config = {
-    windowHeight: 64,
-    windowWidth: 32,
+    windowWidth: 64,
+    windowHeight: 32,
     forgroundColor: "white", // green #33ff66
     backgroundColor: "black", // black
-    scaleFactor: 10
+    scaleFactor: 20
   };
   return myConf;
 }
