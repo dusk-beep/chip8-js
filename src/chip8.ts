@@ -338,7 +338,7 @@ class Chip8 {
       case 0x08:
         if (this.inst.N == 0x00) {
           // Sets VX to the value of VY.[24]
-          this.machine.V[this.inst.X] == this.machine.V[this.inst.Y];
+          this.machine.V[this.inst.X] = this.machine.V[this.inst.Y];
         } else if (this.inst.N == 0x01) {
           // Sets VX to VX or VY. (bitwise OR operation).[24]
           this.machine.V[this.inst.X] |= this.machine.V[this.inst.Y];
@@ -395,6 +395,11 @@ class Chip8 {
       case 0x0a:
         // Sets I to the address NNN
         this.machine.I = this.inst.NNN;
+        break;
+
+      case 0x0b:
+        // Jumps to the address NNN plus V0.[24]
+        this.machine.pc = this.machine.V[0] + this.inst.NNN;
         break;
 
       case 0x0c:
@@ -460,19 +465,9 @@ class Chip8 {
             this.machine.I += this.machine.V[this.inst.X];
             break;
 
-          case 0x55:
-            //Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified.[d][24]
-
-            for (let i = 0; i < this.machine.V[this.inst.X]; i++) {
-              this.machine.ram[this.machine.I + i] = this.machine.V[i];
-            }
-            break;
-
-          case 0x65:
-            // Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified.[d
-            for (let i = 0; i < this.machine.V[this.inst.X]; i++) {
-              this.machine.V[i] = this.machine.ram[this.machine.I + i];
-            }
+          case 0x29:
+            // Sets I to the location of the sprite for the character in VX(only consider the lowest nibble). Characters 0-F (in hexadecimal) are represented by a 4x5 font.[24]
+            this.machine.I = this.machine.V[this.inst.X] * 5;
             break;
 
           case 0x33:
@@ -486,6 +481,21 @@ class Chip8 {
             this.machine.ram[this.machine.I] = bcd % 10;
             bcd /= 10;
 
+            break;
+
+          case 0x55:
+            //Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified.[d][24]
+
+            for (let i = 0; i <= this.machine.V[this.inst.X]; i++) {
+              this.machine.ram[this.machine.I + i] = this.machine.V[i];
+            }
+            break;
+
+          case 0x65:
+            // Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified.[d
+            for (let i = 0; i <= this.machine.V[this.inst.X]; i++) {
+              this.machine.V[i] = this.machine.ram[this.machine.I + i];
+            }
             break;
 
           default:
