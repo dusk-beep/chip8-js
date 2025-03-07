@@ -72,39 +72,6 @@ class Chip8 {
     this.config = cfg;
   }
 
-  //draw2() {
-  //  const width = this.config.windowWidth;
-  //  const scaleFactor = this.config.scaleFactor;
-  //
-  //  this.win.ctx!.fillStyle = "black";
-  //  this.win.ctx!.fillRect(0, 0, width, this.win.height);
-  //
-  //  const rect = {
-  //    x: 0,
-  //    y: 0,
-  //    w: scaleFactor,
-  //    h: scaleFactor
-  //  };
-  //  // loop over the display array and if it is on draw
-  //  for (let i = 0; i < this.machine.display.length; i++) {
-  //    // Translate 1D index i value to 2D X/Y coordinates
-  //    // X = i % window width
-  //    // Y = i / window width note: should be integer
-  //    //
-  //    // scaleFactor due to remember 0 and 1
-  //    rect.x = (i % width) * scaleFactor;
-  //    rect.y = Math.floor(i / width) * scaleFactor;
-  //
-  //    // if the pixel is on then draw forground color
-  //    if (this.machine.display[i]) {
-  //      this.win.ctx!.fillStyle = this.config.forgroundColor;
-  //    } else {
-  //      this.win.ctx!.fillStyle = this.config.backgroundColor;
-  //    }
-  //    this.win.ctx!.fillRect(rect.x, rect.y, rect.w, rect.h);
-  //  }
-  //}
-
   draw() {
     const {
       windowWidth: width,
@@ -159,8 +126,104 @@ class Chip8 {
   }
 
   debug() {
+    // FFFF
+    // 1NNN
+
+    this.inst.opcode = this._fetch();
+
+    // pre increment pc for the next instruction
+    //this._increment_pc();
+    //this.debug();
+
+    //fill out the current instruction format
+    this.inst.NNN = this.inst.opcode & 0x0fff; // last 12 bits
+    this.inst.NN = this.inst.opcode & 0x00ff; // last 8 bits
+    this.inst.N = this.inst.opcode & 0x000f; // only last 4 bits
+    this.inst.X = (this.inst.opcode >> 8) & 0x0f; // shift by 8 and get the last 4 bits
+    this.inst.Y = (this.inst.opcode >> 4) & 0x0f; // shift by 4 and get the last 4 bits
+
+    let msg: string = "";
+    // get the msb 4 bits
+    // emulate the opcode
+    switch ((this.inst.opcode >> 12) & 0x0f) {
+      case 0x00:
+        // clear the screen
+        if (this.inst.NN == 0xe0) {
+          // reset the display array to false
+          msg = "cleared the screen";
+        }
+        break;
+
+      case 0x01:
+        // Jumps to address NNN.
+        msg = `move pc form${this.machine.pc.toString(16)} to ${this.inst.NNN.toString(16)}`;
+        break;
+
+      case 0x02:
+        // Calls subroutine at NNN.[24
+        // push the current pc to top of stack
+        // stackPtr is initailized to -1
+        //
+        msg = `incrmenet stackptr and jump to nnn ${this.machine.stackPtr} `;
+        break;
+
+      case 0x03:
+        // Skips the next instruction if VX equals NN (usually the next instruction is a jump to skip a code block)
+        msg = `skip next instruction if ${this.machine.V[this.inst.X]} == ${this.inst.NN}`;
+        break;
+
+      case 0x04:
+        // Skips the next instruction if VX equals NN (usually the next instruction is a jump to skip a code block)
+        msg = `skip next instruction if ${this.machine.V[this.inst.X]} != ${this.inst.NN}`;
+        break;
+
+      case 0x05:
+        // Skips the next instruction if VX equals VY (usually the next instruction is a jump to skip a code block)
+        msg = `skip next instruction if ${this.machine.V[this.inst.X]} == ${this.machine.V[this.inst.Y]}`;
+        break;
+
+      case 0x06:
+        // Sets VX to NN
+        msg = `sets  VX  to ${this.inst.NN.toString(16)}`;
+        break;
+
+      case 0x07:
+        // Adds NN to VX (carry flag is not changed)
+        //this.machine.V[this.inst.X] += this.inst.NN;
+        msg = `adds ${this.inst.NN} to ${this.machine.V[this.inst.X]} `;
+        break;
+
+      case 0x09:
+        // Skips the next instruction if VX not equals VY (usually the next instruction is a jump to skip a code block)
+        msg = `skip next instruction if ${this.machine.V[this.inst.X]} != ${this.machine.V[this.inst.Y]}`;
+        break;
+
+      case 0x0a:
+        // Sets I to the address NNN
+        //this.machine.I = this.inst.NNN;
+        msg = `sets I to ${this.inst.NNN}`;
+        break;
+
+      case 0x0d:
+        // Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels
+        // Each row of 8 pixels is read as bit-coded starting from memory location I;
+        // I value does not change after the execution of this instruction.
+        // As described above, VF is set to 1 if any screen pixels are flipped from set to unset when the sprite is drawn, and to 0 if that does not happen.
+        msg = `draw from ${this.machine.V[this.inst.X].toString(16)},${this.machine.V[this.inst.Y].toString(16)}: ${this.inst.N.toString(16)} byte long sprite `;
+
+        break;
+
+      default:
+        //this.state = Chip8State.Quit;
+        //console.log(
+        //  "Setting state to Quit due to unimplemented opcode: ",
+        //  this.inst.opcode.toString(16)
+        //);
+        //throw new Error("unimplemented opcode");
+        break;
+    }
     console.log(
-      `${this.machine.pc.toString(16)} : ${this.inst.opcode.toString(16)}`
+      `${this.inst.opcode.toString(16)} : ${this.machine.pc.toString(16)} :${msg} `
     );
   }
 
@@ -170,16 +233,16 @@ class Chip8 {
 
     this.inst.opcode = this._fetch();
 
-    // pre increment pc for the next instruction
-    this._increment_pc();
-    this.debug();
-
     //fill out the current instruction format
     this.inst.NNN = this.inst.opcode & 0x0fff; // last 12 bits
     this.inst.NN = this.inst.opcode & 0x00ff; // last 8 bits
     this.inst.N = this.inst.opcode & 0x000f; // only last 4 bits
     this.inst.X = (this.inst.opcode >> 8) & 0x0f; // shift by 8 and get the last 4 bits
     this.inst.Y = (this.inst.opcode >> 4) & 0x0f; // shift by 4 and get the last 4 bits
+
+    // pre increment pc for the next instruction
+    this.debug();
+    this._increment_pc();
 
     // get the msb 4 bits
     // emulate the opcode
@@ -197,6 +260,36 @@ class Chip8 {
         this.machine.pc = this.inst.NNN;
         break;
 
+      case 0x02:
+        // Calls subroutine at NNN.[24
+        // push the current pc to top of stack
+        // stackPtr is initailized to -1
+        this.machine.stack[this.machine.stackPtr++] = this.machine.pc;
+        this.machine.pc = this.inst.NNN;
+
+        break;
+
+      case 0x03:
+        // Skips the next instruction if VX equals NN (usually the next instruction is a jump to skip a code block)
+        if (this.machine.V[this.inst.X] == this.inst.NN) {
+          this._increment_pc();
+        }
+        break;
+
+      case 0x04:
+        // Skips the next instruction if VX NOT equals NN (usually the next instruction is a jump to skip a code block)
+        if (this.machine.V[this.inst.X] != this.inst.NN) {
+          this._increment_pc();
+        }
+        break;
+
+      case 0x05:
+        // Skips the next instruction if VX  equals VY (usually the next instruction is a jump to skip a code block)
+        if (this.machine.V[this.inst.X] == this.machine.V[this.inst.Y]) {
+          this._increment_pc();
+        }
+        break;
+
       case 0x06:
         // Sets VX to NN
         this.machine.V[this.inst.X] = this.inst.NN;
@@ -205,6 +298,13 @@ class Chip8 {
       case 0x07:
         // Adds NN to VX (carry flag is not changed)
         this.machine.V[this.inst.X] += this.inst.NN;
+        break;
+
+      case 0x09:
+        // Skips the next instruction if VX NOT equals VY (usually the next instruction is a jump to skip a code block)
+        if (this.machine.V[this.inst.X] != this.machine.V[this.inst.Y]) {
+          this._increment_pc();
+        }
         break;
 
       case 0x0a:
