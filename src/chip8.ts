@@ -463,19 +463,29 @@ class Chip8 {
           case 0x55:
             //Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified.[d][24]
 
-            let I = this.machine.I;
-
             for (let i = 0; i < this.machine.V[this.inst.X]; i++) {
-              I += i;
-              I = this.machine.V[i];
+              this.machine.ram[this.machine.I + i] = this.machine.V[i];
             }
             break;
 
           case 0x65:
             // Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified.[d
             for (let i = 0; i < this.machine.V[this.inst.X]; i++) {
-              this.machine.V[i] = this.machine.I + i;
+              this.machine.V[i] = this.machine.ram[this.machine.I + i];
             }
+            break;
+
+          case 0x33:
+            // Stores the binary-coded decimal representation of VX, with the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2
+            let bcd = this.machine.V[this.inst.X];
+
+            this.machine.ram[this.machine.I + 2] = bcd % 10;
+            bcd /= 10;
+            this.machine.ram[this.machine.I + 1] = bcd % 10;
+            bcd /= 10;
+            this.machine.ram[this.machine.I] = bcd % 10;
+            bcd /= 10;
+
             break;
 
           default:
