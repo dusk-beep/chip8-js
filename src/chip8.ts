@@ -151,12 +151,14 @@ class Chip8 {
         if (this.inst.NN == 0xe0) {
           // reset the display array to false
           msg = "cleared the screen";
-        }
+        } else if (this.inst.NN == 0xee)
+          msg = `decrement stackptr return to ${this.machine.stack[this.machine.stackPtr]} `;
+
         break;
 
       case 0x01:
         // Jumps to address NNN.
-        msg = `move pc form${this.machine.pc.toString(16)} to ${this.inst.NNN.toString(16)}`;
+        msg = `move pc from ${this.machine.pc.toString(16)} to ${this.inst.NNN.toString(16)}`;
         break;
 
       case 0x02:
@@ -192,7 +194,39 @@ class Chip8 {
         //this.machine.V[this.inst.X] += this.inst.NN;
         msg = `adds ${this.inst.NN} to ${this.machine.V[this.inst.X]} `;
         break;
+      case 0x08:
+        if (this.inst.N == 0x00) {
+          // Sets VX to the value of VY.[24]
+          msg = `add Vx with Vy`;
+        } else if (this.inst.N == 0x01) {
+          // Sets VX to VX or VY. (bitwise OR operation).[24]
+          msg = `or Vx with Vy`;
+        } else if (this.inst.N == 0x02) {
+          // Sets VX to VX and VY. (bitwise AND operation).[24]
+          msg = `and Vx with Vy`;
+        } else if (this.inst.N == 0x03) {
+          //Sets VX to VX xor VY.[24]
+          msg = `xor Vx with Vy`;
+        } else if (this.inst.N == 0x04) {
+          // Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not.
+          msg = `add Vx with Vy`;
+        } else if (this.inst.N == 0x05) {
+          // VY is subtracted from VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VX >= VY and 0 if not).
+          msg = `sub Vx with Vy`;
+        } else if (this.inst.N == 0x06) {
+          // Shifts VX to the right by 1, then stores the least significant bit of VX prior to the shift into VF.[b][24]
+          //
+          msg = `shift Vx by 1 right`;
+        } else if (this.inst.N == 0x07) {
+          // Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX)
 
+          msg = "vx = vy-vx";
+        } else if (this.inst.N == 0x0e) {
+          // Shifts VX to the left by 1, then sets VF to 1 if the most significant bit of VX prior to that shift was set, or to 0 if it was unset.[
+          msg = `shift Vx by 1 left`;
+        }
+
+        break;
       case 0x09:
         // Skips the next instruction if VX not equals VY (usually the next instruction is a jump to skip a code block)
         msg = `skip next instruction if ${this.machine.V[this.inst.X]} != ${this.machine.V[this.inst.Y]}`;
@@ -232,6 +266,9 @@ class Chip8 {
     // 1NNN
 
     this.inst.opcode = this._fetch();
+    // pre increment pc for the next instruction
+    this.debug();
+    this._increment_pc();
 
     //fill out the current instruction format
     this.inst.NNN = this.inst.opcode & 0x0fff; // last 12 bits
@@ -239,10 +276,6 @@ class Chip8 {
     this.inst.N = this.inst.opcode & 0x000f; // only last 4 bits
     this.inst.X = (this.inst.opcode >> 8) & 0x0f; // shift by 8 and get the last 4 bits
     this.inst.Y = (this.inst.opcode >> 4) & 0x0f; // shift by 4 and get the last 4 bits
-
-    // pre increment pc for the next instruction
-    this.debug();
-    this._increment_pc();
 
     // get the msb 4 bits
     // emulate the opcode
@@ -252,6 +285,8 @@ class Chip8 {
         if (this.inst.NN == 0xe0) {
           // reset the display array to false
           this.machine.display = new Array(64 * 32).fill(false);
+        } else if (this.inst.NN == 0xee) {
+          this.machine.pc = this.machine.stack[this.machine.stackPtr--];
         }
         break;
 
@@ -264,7 +299,7 @@ class Chip8 {
         // Calls subroutine at NNN.[24
         // push the current pc to top of stack
         // stackPtr is initailized to -1
-        this.machine.stack[this.machine.stackPtr++] = this.machine.pc;
+        this.machine.stack[++this.machine.stackPtr] = this.machine.pc;
         this.machine.pc = this.inst.NNN;
 
         break;
@@ -300,6 +335,56 @@ class Chip8 {
         this.machine.V[this.inst.X] += this.inst.NN;
         break;
 
+      case 0x08:
+        if (this.inst.N == 0x00) {
+          // Sets VX to the value of VY.[24]
+          this.machine.V[this.inst.X] == this.machine.V[this.inst.Y];
+        } else if (this.inst.N == 0x01) {
+          // Sets VX to VX or VY. (bitwise OR operation).[24]
+          this.machine.V[this.inst.X] |= this.machine.V[this.inst.Y];
+        } else if (this.inst.N == 0x02) {
+          // Sets VX to VX and VY. (bitwise AND operation).[24]
+          this.machine.V[this.inst.X] &= this.machine.V[this.inst.Y];
+        } else if (this.inst.N == 0x03) {
+          //Sets VX to VX xor VY.[24]
+          this.machine.V[this.inst.X] ^= this.machine.V[this.inst.Y];
+        } else if (this.inst.N == 0x04) {
+          // Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not.
+          let carry = Number(
+            this.machine.V[this.inst.X] + this.machine.V[this.inst.Y] > 255
+          );
+
+          this.machine.V[this.inst.X] += this.machine.V[this.inst.Y];
+          this.machine.V[0x0f] = carry;
+        } else if (this.inst.N == 0x05) {
+          // VY is subtracted from VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VX >= VY and 0 if not).
+          //
+          let underflow =
+            this.machine.V[this.inst.Y] >= this.machine.V[this.inst.X];
+
+          this.machine.V[this.inst.X] -= this.machine.V[this.inst.Y];
+          this.machine.V[0x0f] = Number(underflow);
+        } else if (this.inst.N == 0x06) {
+          // Shifts VX to the right by 1, then stores the least significant bit of VX prior to the shift into VF.[b][24]
+          this.machine.V[0x0f] = this.machine.V[this.inst.X] & 1;
+          this.machine.V[this.inst.X] >>= 1;
+        } else if (this.inst.N == 0x07) {
+          // Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX)
+
+          let underflow =
+            this.machine.V[this.inst.Y] >= this.machine.V[this.inst.X];
+
+          this.machine.V[this.inst.X] =
+            this.machine.V[this.inst.Y] - this.machine.V[this.inst.X];
+          this.machine.V[0x0f] = Number(underflow);
+        } else if (this.inst.N == 0x0e) {
+          // Shifts VX to the left by 1, then sets VF to 1 if the most significant bit of VX prior to that shift was set, or to 0 if it was unset.[
+          this.machine.V[0x0f] = (this.machine.V[this.inst.X] & 0x80) >> 7;
+          this.machine.V[this.inst.X] <<= 1;
+        }
+
+        break;
+
       case 0x09:
         // Skips the next instruction if VX NOT equals VY (usually the next instruction is a jump to skip a code block)
         if (this.machine.V[this.inst.X] != this.machine.V[this.inst.Y]) {
@@ -312,6 +397,13 @@ class Chip8 {
         this.machine.I = this.inst.NNN;
         break;
 
+      case 0x0c:
+        // Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
+        //
+        this.machine.V[this.inst.X] =
+          Math.floor(Math.random() * 255) & this.inst.NN;
+        break;
+
       case 0x0d:
         // Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels
         // Each row of 8 pixels is read as bit-coded starting from memory location I;
@@ -321,7 +413,6 @@ class Chip8 {
         let xCoord = this.machine.V[this.inst.X] % this.config.windowWidth;
         const orgX = xCoord;
         let yCoord = this.machine.V[this.inst.Y] % this.config.windowHeight;
-
         // initailize the carry flag to zero
         this.machine.V[0x0f] = 0;
 
@@ -359,6 +450,41 @@ class Chip8 {
           }
 
           if (++yCoord >= this.config.windowHeight) break;
+        }
+        break;
+
+      case 0x0f:
+        switch (this.inst.NN) {
+          case 0x1e:
+            // Adds VX to I. VF is not affected.[c][2
+            this.machine.I += this.machine.V[this.inst.X];
+            break;
+
+          case 0x55:
+            //Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified.[d][24]
+
+            let I = this.machine.I;
+
+            for (let i = 0; i < this.machine.V[this.inst.X]; i++) {
+              I += i;
+              I = this.machine.V[i];
+            }
+            break;
+
+          case 0x65:
+            // Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified.[d
+            for (let i = 0; i < this.machine.V[this.inst.X]; i++) {
+              this.machine.V[i] = this.machine.I + i;
+            }
+            break;
+
+          default:
+            this.state = Chip8State.Quit;
+            console.log(
+              "Setting state to Quit due to unimplemented opcode: ",
+              this.inst.opcode.toString(16)
+            );
+            throw new Error("unimplemented opcode");
         }
         break;
 
