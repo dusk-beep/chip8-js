@@ -6,12 +6,22 @@
 
 body {
   height: 100vh;
-  background-color: dodgerblue; /* Optional */
+  background-color: #89b4fa; /* Cappuccino color (light brown/beige) */
+  color: #3E2A47; /* Mocha color (dark brown) */
+}
+
+button {
+  background-color: #89b4fa; /* Mocha color */
+  color: #F1E0C6; /* Light cappuccino/beige for text */
+}
+
+button:hover {
+  background-color: #4A2C1C; /* Darker mocha for hover effect */
 }
 
 canvas {
-  display: block; /* Removes extra spacing */
-  image-rendering: pixelated; /* Prevents blurriness when scaled */
+  display: block; 
+  image-rendering: pixelated; 
   border: 1px solid white;
   width: auto;
   height: auto;
@@ -19,4 +29,10 @@ canvas {
 
 select {
   display: inline-block;
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
 }

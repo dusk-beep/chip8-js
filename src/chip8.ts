@@ -25,7 +25,7 @@ interface Machine {
   pc: number; // 16 bit program counter
   delayTimer: number; // 8 bit delay timer
   soundTimer: number; // an 8 bit sound timer
-  keypad: boolean[]; // 16 boolean hex keys
+  //keypad: boolean[]; // 16 boolean hex keys
   //inst: InstructionFormat; // currently executing instruction
   V: Uint8Array; // 8 bit 16 genearal purpose register
   I: number; // index register
@@ -41,20 +41,31 @@ class Chip8 {
   inst: InstructionFormat;
   config: Config;
   win: Window;
+  keypad: boolean[];
+
+  context: AudioContext;
+  oscillator: OscillatorNode | null = null;
 
   constructor(
     state: Chip8State = Chip8State.Running,
     cfg: Config,
     win: Window
   ) {
+    this.setupInputListeners();
+    this.context = new window.AudioContext();
+    if (!this.context) {
+      throw new Error("no AudioContext");
+    }
+    this.startSound();
     this.state = state;
     this.win = win;
+    this.keypad = new Array(16).fill(false);
     this.machine = {
       ram: new Uint8Array(4096),
       display: new Array(64 * 32).fill(false),
       stack: new Uint16Array(12),
       pc: this.entryPoint,
-      keypad: Array(16).fill(false),
+      //keypad: Array(16).fill(false),
       V: new Uint8Array(16),
       I: 0,
       soundTimer: 0,
@@ -100,6 +111,42 @@ class Chip8 {
         ctx.fillRect(x, y, scaleFactor, scaleFactor);
       }
     }
+  }
+
+  emulateTimers() {
+    if (this.machine.soundTimer > 0) {
+      this.machine.soundTimer--;
+      this.triggerSound();
+    } else {
+      // disbale sound timer
+      this.stopSound();
+    }
+
+    if (this.machine.delayTimer > 0) {
+      this.machine.delayTimer--;
+    }
+  }
+
+  startSound() {
+    if (this.oscillator === null) {
+      this.oscillator = this.context.createOscillator();
+      this.oscillator.type = "square";
+      this.oscillator.frequency.setValueAtTime(440, this.context.currentTime);
+      this.oscillator.connect(this.context.destination);
+      this.oscillator.start();
+    }
+  }
+
+  stopSound() {
+    if (this.oscillator !== null) {
+      this.oscillator.stop();
+      this.oscillator = null;
+    }
+  }
+
+  triggerSound() {
+    this.machine.soundTimer = 10; // Set sound timer to a value to make sound play for some time
+    this.startSound();
   }
 
   // load font and rom and set the initial pc to 0x200(start of rom)
@@ -248,12 +295,7 @@ class Chip8 {
         break;
 
       default:
-        //this.state = Chip8State.Quit;
-        //console.log(
-        //  "Setting state to Quit due to unimplemented opcode: ",
-        //  this.inst.opcode.toString(16)
-        //);
-        //throw new Error("unimplemented opcode");
+        // will throw in actual
         break;
     }
     console.log(
@@ -404,7 +446,6 @@ class Chip8 {
 
       case 0x0c:
         // Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
-        //
         this.machine.V[this.inst.X] =
           Math.floor(Math.random() * 255) & this.inst.NN;
         break;
@@ -453,16 +494,60 @@ class Chip8 {
 
             if (++xCoord >= this.config.windowWidth) break;
           }
-
           if (++yCoord >= this.config.windowHeight) break;
+        }
+        break;
+
+      case 0x0e:
+        if (this.inst.NN == 0x9e) {
+          // Skips the next instruction if the key stored in VX(only consider the lowest nibble) is pressed (usually the next instruction is a jump to skip a code block).
+          if (this.keypad[this.machine.V[this.inst.X]]) this._increment_pc();
+        } else if (this.inst.NN == 0xa1) {
+          // Skips the next instruction if the key stored in VX(only consider the lowest nibble) is not pressed (usually the next instruction is a jump to skip a code block).
+          if (!this.keypad[this.machine.V[this.inst.X]]) this._increment_pc();
         }
         break;
 
       case 0x0f:
         switch (this.inst.NN) {
+          case 0x07:
+            // Sets VX to the value of the delay timer.[2
+            this.machine.V[this.inst.X] = this.machine.delayTimer;
+            break;
+          case 0x0a:
+            //A key press is awaited, and then stored in VX (blocking operation, all instruction halted until next key event, delay and sound timers should continue processing).
+            let keyPressed: boolean = false;
+            let key = 0xff;
+
+            for (let i = 0; i < this.keypad.length; i++) {
+              key = 0xff;
+              if (this.keypad[i]) {
+                key = i;
+                keyPressed = true;
+                break;
+              }
+            }
+
+            if (!keyPressed) {
+              this.machine.pc -= 2;
+            } else {
+              if (this.keypad[key]) this.machine.pc -= 2;
+              else {
+                this.machine.V[this.inst.X] = key;
+              }
+            }
+            break;
           case 0x1e:
             // Adds VX to I. VF is not affected.[c][2
             this.machine.I += this.machine.V[this.inst.X];
+            break;
+
+          case 0x15:
+            this.machine.delayTimer = this.machine.V[this.inst.X];
+            break;
+
+          case 0x18:
+            this.machine.soundTimer = this.machine.V[this.inst.X];
             break;
 
           case 0x29:
@@ -520,6 +605,95 @@ class Chip8 {
 
   _increment_pc() {
     this.machine.pc += 2;
+  }
+  setupInputListeners() {
+    const buttons: NodeListOf<HTMLButtonElement> =
+      document.querySelectorAll("button");
+
+    if (buttons.length === 0) return;
+
+    buttons.forEach(button => {
+      // For mouse events (mousedown as keydown, mouseup as keyup)
+      button.addEventListener("mousedown", () => {
+        this.handle_input(button, "keydown");
+      });
+
+      button.addEventListener("mouseup", () => {
+        this.handle_input(button, "keyup");
+      });
+
+      // For touch events (touchstart as keydown, touchend as keyup)
+      button.addEventListener("touchstart", () => {
+        this.handle_input(button, "keydown");
+      });
+
+      button.addEventListener("touchend", () => {
+        this.handle_input(button, "keyup");
+      });
+    });
+  }
+
+  handle_input(button: HTMLButtonElement, eventType: "keydown" | "keyup") {
+    if (!button) return;
+
+    const value = button.textContent;
+
+    // Depending on whether it's a keydown or keyup event, set the corresponding keypad state
+    const isPressed = eventType === "keydown";
+
+    switch (value) {
+      case "1":
+        this.keypad[0x01] = isPressed;
+        break;
+      case "2":
+        this.keypad[0x02] = isPressed;
+        break;
+      case "3":
+        this.keypad[0x03] = isPressed;
+        break;
+      case "4":
+        this.keypad[0x0c] = isPressed;
+        break;
+
+      case "q":
+        this.keypad[0x04] = isPressed;
+        break;
+      case "w":
+        this.keypad[0x05] = isPressed;
+        break;
+      case "e":
+        this.keypad[0x06] = isPressed;
+        break;
+      case "r":
+        this.keypad[0x0d] = isPressed;
+        break;
+
+      case "a":
+        this.keypad[0x07] = isPressed;
+        break;
+      case "s":
+        this.keypad[0x08] = isPressed;
+        break;
+      case "d":
+        this.keypad[0x09] = isPressed;
+        break;
+      case "f":
+        this.keypad[0x0e] = isPressed;
+        break;
+
+      case "z":
+        this.keypad[0x0a] = isPressed;
+        break;
+      case "x":
+        this.keypad[0x00] = isPressed;
+        break;
+      case "c":
+        this.keypad[0x0b] = isPressed;
+        break;
+      case "v":
+        this.keypad[0x0f] = isPressed;
+        break;
+    }
   }
 
   _fetch() {

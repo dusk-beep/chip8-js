@@ -1,3 +1,4 @@
+import { Chip8 } from "./chip8.js";
 import type { Config } from "./config.js";
 
 class Window {
@@ -19,8 +20,9 @@ class Window {
     this.ctx = this.canvas!.getContext("2d");
   }
 
-  handleInput() {
-    // add actual input event triggers
+  clearscreen(): void {
+    this.ctx!.fillStyle = "black";
+    this.ctx!.fillRect(0, 0, this.width, this.height);
   }
 }
 
