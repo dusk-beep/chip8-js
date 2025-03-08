@@ -4,19 +4,30 @@
   box-sizing: border-box;
 }
 
+h1 {
+  text-align: center;
+  font-style: bold;
+}
+
+.can {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 body {
   height: 100vh;
-  background-color: #89b4fa; /* Cappuccino color (light brown/beige) */
-  color: #3E2A47; /* Mocha color (dark brown) */
+  background-color: #141414;
+  color: #3f6;
 }
 
 button {
-  background-color: #89b4fa; /* Mocha color */
-  color: #F1E0C6; /* Light cappuccino/beige for text */
+  background-color: #141414;
+  color: #3f6;
 }
 
 button:hover {
-  background-color: #4A2C1C; /* Darker mocha for hover effect */
+  background-color: #4A2C1C; 
 }
 
 canvas {
@@ -28,7 +39,12 @@ canvas {
 }
 
 select {
-  display: inline-block;
+  background-color: lightgreen; 
+
+}
+
+.sel {
+  text-align: center;
 }
 
 .keypad {

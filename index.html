@@ -8,9 +8,13 @@
     <script type="module" src="./dist/web.js" defer></script>
   </head>
   <body>
-    <canvas class="canvas"></canvas>
+    <h1>Chip8</h1>
+    <div class="can">
+      <canvas class="canvas"></canvas>
+    </div>
+
     <div class="ctr">
-      <section>
+      <section class="sel">
         <select id="select">
           <option disabled selected>load rom</option>
           <option value="IBM Logo.ch8">IbmLogo</option>
@@ -21,7 +25,6 @@
           <option value="Animal Race [Brian Astle].ch8">animal Race</option>
           <option value="Tetris [Fran Dachille, 1991].ch8">tetris</option>
           <option value="BC_test.ch8">bctest</option>
-          <option value="petdog.ch8">petdog</option>
           <option value="Pong 2 (Pong hack) [David Winter, 1997].ch8">
             pong
           </option>

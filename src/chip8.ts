@@ -41,6 +41,7 @@ class Chip8 {
   inst: InstructionFormat;
   config: Config;
   win: Window;
+  isSoundPlaying: boolean = false;
   keypad: boolean[];
 
   context: AudioContext;
@@ -56,7 +57,6 @@ class Chip8 {
     if (!this.context) {
       throw new Error("no AudioContext");
     }
-    this.startSound();
     this.state = state;
     this.win = win;
     this.keypad = new Array(16).fill(false);
@@ -116,7 +116,10 @@ class Chip8 {
   emulateTimers() {
     if (this.machine.soundTimer > 0) {
       this.machine.soundTimer--;
-      this.triggerSound();
+      //this.triggerSound();
+      if (!this.isSoundPlaying) {
+        this.startSound();
+      }
     } else {
       // disbale sound timer
       this.stopSound();
@@ -142,11 +145,6 @@ class Chip8 {
       this.oscillator.stop();
       this.oscillator = null;
     }
-  }
-
-  triggerSound() {
-    this.machine.soundTimer = 10; // Set sound timer to a value to make sound play for some time
-    this.startSound();
   }
 
   // load font and rom and set the initial pc to 0x200(start of rom)
