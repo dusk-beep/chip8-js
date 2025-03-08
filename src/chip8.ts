@@ -496,6 +496,8 @@ class Chip8 {
           }
           if (++yCoord >= this.config.windowHeight) break;
         }
+
+        this.draw();
         break;
 
       case 0x0e:
@@ -606,93 +608,70 @@ class Chip8 {
   _increment_pc() {
     this.machine.pc += 2;
   }
+
   setupInputListeners() {
     const buttons: NodeListOf<HTMLButtonElement> =
       document.querySelectorAll("button");
-
     if (buttons.length === 0) return;
 
+    const handleEvent = (
+      button: HTMLButtonElement,
+      eventType: "keydown" | "keyup",
+      event: Event
+    ) => {
+      //event.preventDefault(); // Prevent touch scrolling issues
+      this.handle_input(button, eventType);
+    };
+
     buttons.forEach(button => {
-      // For mouse events (mousedown as keydown, mouseup as keyup)
-      button.addEventListener("mousedown", () => {
-        this.handle_input(button, "keydown");
-      });
+      //button.addEventListener("mousedown", event =>
+      //  handleEvent(button, "keydown", event)
+      //);
+      //button.addEventListener("mouseup", event =>
+      //  handleEvent(button, "keyup", event)
+      //);
 
-      button.addEventListener("mouseup", () => {
-        this.handle_input(button, "keyup");
-      });
-
-      // For touch events (touchstart as keydown, touchend as keyup)
-      button.addEventListener("touchstart", () => {
-        this.handle_input(button, "keydown");
-      });
-
-      button.addEventListener("touchend", () => {
-        this.handle_input(button, "keyup");
-      });
+      button.addEventListener("touchstart", event =>
+        handleEvent(button, "keydown", event)
+      );
+      button.addEventListener("touchend", event =>
+        handleEvent(button, "keyup", event)
+      );
+      button.addEventListener("touchcancel", event =>
+        handleEvent(button, "keyup", event)
+      ); // Handles lost touches
     });
   }
 
   handle_input(button: HTMLButtonElement, eventType: "keydown" | "keyup") {
     if (!button) return;
 
-    const value = button.textContent;
+    const keyMap: Record<string, number> = {
+      "1": 0x01,
+      "2": 0x02,
+      "3": 0x03,
+      "4": 0x0c,
+      q: 0x04,
+      w: 0x05,
+      e: 0x06,
+      r: 0x0d,
+      a: 0x07,
+      s: 0x08,
+      d: 0x09,
+      f: 0x0e,
+      z: 0x0a,
+      x: 0x00,
+      c: 0x0b,
+      v: 0x0f
+    };
 
-    // Depending on whether it's a keydown or keyup event, set the corresponding keypad state
-    const isPressed = eventType === "keydown";
+    const value = button.textContent?.toLowerCase(); // Ensure lowercase consistency
+    if (value) {
+      const keyCode = keyMap[value];
 
-    switch (value) {
-      case "1":
-        this.keypad[0x01] = isPressed;
-        break;
-      case "2":
-        this.keypad[0x02] = isPressed;
-        break;
-      case "3":
-        this.keypad[0x03] = isPressed;
-        break;
-      case "4":
-        this.keypad[0x0c] = isPressed;
-        break;
-
-      case "q":
-        this.keypad[0x04] = isPressed;
-        break;
-      case "w":
-        this.keypad[0x05] = isPressed;
-        break;
-      case "e":
-        this.keypad[0x06] = isPressed;
-        break;
-      case "r":
-        this.keypad[0x0d] = isPressed;
-        break;
-
-      case "a":
-        this.keypad[0x07] = isPressed;
-        break;
-      case "s":
-        this.keypad[0x08] = isPressed;
-        break;
-      case "d":
-        this.keypad[0x09] = isPressed;
-        break;
-      case "f":
-        this.keypad[0x0e] = isPressed;
-        break;
-
-      case "z":
-        this.keypad[0x0a] = isPressed;
-        break;
-      case "x":
-        this.keypad[0x00] = isPressed;
-        break;
-      case "c":
-        this.keypad[0x0b] = isPressed;
-        break;
-      case "v":
-        this.keypad[0x0f] = isPressed;
-        break;
+      if (keyCode !== undefined) {
+        this.keypad[keyCode] = eventType === "keydown";
+      }
     }
   }
 

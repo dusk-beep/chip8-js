@@ -17,6 +17,7 @@ function main(arrBuf: ArrayBuffer): number {
   chip8.load(romData);
 
   let timer = 0;
+  chip8.draw();
 
   // Main emulator loop
   function emuLoop() {
@@ -32,9 +33,10 @@ function main(arrBuf: ArrayBuffer): number {
         chip8.emulateTimers();
         timer = 0;
       }
-      chip8.draw();
+      //chip8.draw();
     }
-    setTimeout(emuLoop, 16);
+    setTimeout(emuLoop, 3);
+    //requestAnimationFrame(emuLoop);
   }
 
   // Start the emulator loop
