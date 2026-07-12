@@ -4,14 +4,14 @@ A CHIP-8 emulator written in **TypeScript** that runs entirely in the browser. T
 
 ## Features
 
-- 🕹️ Complete CHIP-8 CPU implementation
-- 📦 4 KB memory and 16 general-purpose registers
-- 📺 64 × 32 monochrome display
-- ⌨️ Hexadecimal keypad input
-- ⏱️ Delay and sound timers
-- 📂 ROM loading and execution
-- 🌐 Browser-based interface
-- ⚡ Built with TypeScript and Vite
+- Complete CHIP-8 CPU implementation
+- 4 KB memory and 16 general-purpose registers
+- 64 × 32 monochrome display
+- Hexadecimal keypad input
+- Delay and sound timers
+- ROM loading and execution
+- Browser-based interface
+- Built with TypeScript and Vite
 
 ## Screenshot
 
