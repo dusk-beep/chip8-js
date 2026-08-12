@@ -1,4 +1,4 @@
-import { main } from "./main.js";
+import { loadRom } from "./main.js";
 
 const select = document.querySelector<HTMLSelectElement>("#select");
 
@@ -6,7 +6,7 @@ if (!select) {
   throw new Error("ROM selector not found");
 }
 
-async function loadRom() {
+async function loadSelectedRom() {
   const rom = select.value;
 
   try {
@@ -20,21 +20,15 @@ async function loadRom() {
 
     const arrayBuffer = await resp.arrayBuffer();
 
-    if (main(arrayBuffer)) {
-      throw new Error("unexpected error occurred in main loop");
-    }
+    loadRom(arrayBuffer);
   } catch (error) {
-    console.error(error);
+    console.error("Could not load ROM:", error);
   }
 }
 
 async function loadRomList() {
   try {
-    const response = await fetch("./roms/manifest.json",{
-      headers: {
-        "Accept":"application/json"
-      },
-    });
+    const response = await fetch("./roms/manifest.json");
 
     if (!response.ok) {
       throw new Error(
@@ -45,7 +39,6 @@ async function loadRomList() {
     if (!response.headers.get("content-type")?.includes("application/json")) {
       throw new Error("Server returned something other than JSON");
     }
-
 
     const roms: string[] = await response.json();
 
@@ -62,6 +55,6 @@ async function loadRomList() {
   }
 }
 
-select.addEventListener("change", loadRom);
+select.addEventListener("change", loadSelectedRom);
 
 loadRomList();

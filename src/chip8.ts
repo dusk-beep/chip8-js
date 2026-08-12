@@ -630,9 +630,6 @@ class Chip8 {
   setupInputListeners() {
     const buttons =
     document.querySelectorAll<HTMLButtonElement>("#keypad button");
-
-    console.log("buttons:", buttons.length);
-
     buttons.forEach(button => {
       button.addEventListener("pointerdown", event => {
         event.preventDefault();
@@ -659,7 +656,6 @@ class Chip8 {
     const keyCode = this.keyMap[key];
 
     if (keyCode === undefined) return;
-    console.log(keyCode)
 
     this.keypad[keyCode] = pressed;
 }
@@ -674,6 +670,26 @@ class Chip8 {
       (this.machine.ram[this.machine.pc] << 8) |
       (this.machine.ram[this.machine.pc + 1] << 0)
     );
+  }
+  
+  clearDisplay() {
+   this.machine.display = new Array(64 * 32).fill(false);
+  }
+
+  reset() {
+    this.machine.V.fill(0);
+    this.machine.I = 0;
+    this.machine.pc = 0x200;
+    this.machine.sp = 0;
+    this.machine.delay_timer = 0;
+    this.machine.sound_timer = 0;
+
+    this.machine.stack.fill(0);
+    this.keypad.fill(false);
+
+    this.state = Chip8State.Running;
+
+    this.clearDisplay();
   }
 }
 
