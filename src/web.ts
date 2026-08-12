@@ -1,20 +1,67 @@
 import { main } from "./main.js";
 
-async function loadrom() {
-  const rom = (<HTMLSelectElement>document.getElementById("select")).value;
+const select = document.querySelector<HTMLSelectElement>("#select");
+
+if (!select) {
+  throw new Error("ROM selector not found");
+}
+
+async function loadRom() {
+  const rom = select.value;
 
   try {
-    const resp = await fetch(`./rom/${rom}`);
+    const resp = await fetch(`./roms/${rom}`);
+
+    if (!resp.ok) {
+      throw new Error(
+        `Failed to load ROM: ${resp.status} ${resp.statusText}`
+      );
+    }
+
     const arrayBuffer = await resp.arrayBuffer();
 
-    if (main(arrayBuffer)) throw Error("unexpected error occured in main loop");
+    if (main(arrayBuffer)) {
+      throw new Error("unexpected error occurred in main loop");
+    }
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 }
 
-console.log("emtry");
+async function loadRomList() {
+  try {
+    const response = await fetch("./roms/manifest.json",{
+      headers: {
+        "Accept":"application/json"
+      },
+    });
 
-const selected = document.querySelector("select");
-if (!selected) throw Error("no rom selected");
-selected.addEventListener("change", loadrom);
+    if (!response.ok) {
+      throw new Error(
+        `Failed to load ROM list: ${response.status} ${response.statusText}`
+      );
+    }
+
+    if (!response.headers.get("content-type")?.includes("application/json")) {
+      throw new Error("Server returned something other than JSON");
+    }
+
+
+    const roms: string[] = await response.json();
+
+    for (const rom of roms) {
+      const option = document.createElement("option");
+
+      option.value = rom;
+      option.textContent = rom;
+
+      select.appendChild(option);
+    }
+  } catch (error) {
+    console.error("Could not load ROM list:", error);
+  }
+}
+
+select.addEventListener("change", loadRom);
+
+loadRomList();

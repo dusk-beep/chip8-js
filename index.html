@@ -1,57 +1,49 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title></title>
-    <link href="css/style.css" rel="stylesheet" />
-    <script type="module" src="./dist/web.js" defer></script>
-  </head>
-  <body>
-    <h1>Chip8</h1>
-    <div class="can">
-      <canvas class="canvas"></canvas>
-    </div>
 
-    <div class="ctr">
-      <section class="sel">
-        <select id="select">
-          <option disabled selected>load rom</option>
-          <option value="IBM Logo.ch8">IbmLogo</option>
-          <option value="test_opcode.ch8">test_opcode</option>
-          <option value="Maze (alt) [David Winter, 199x].ch8">maze alt</option>
-          <option value="Stars [Sergey Naydenov, 2010].ch8">stars</option>
-          <option value="Zero Demo [zeroZshadow, 2007].ch8">zero Demo</option>
-          <option value="Animal Race [Brian Astle].ch8">animal Race</option>
-          <option value="Tetris [Fran Dachille, 1991].ch8">tetris</option>
-          <option value="BC_test.ch8">bctest</option>
-          <option value="Pong 2 (Pong hack) [David Winter, 1997].ch8">
-            pong
-          </option>
-        </select>
-      </section>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title></title>
+  <link href="css/style.css" rel="stylesheet" />
+  <script type="module" src="/src/web.ts"></script>
+</head>
 
-      <section id="keypad" class="keypad">
-        <button>1</button>
-        <button>2</button>
-        <td><button>3</button></td>
-        <td><button>3</button></td>
+<body>
+  <h1>chip8</h1>
+  <div class="can">
+    <canvas class="canvas"></canvas>
+  </div>
 
-        <button>q</button>
-        <button>w</button>
-        <button>e</button>
-        <button>r</button>
+  <div class="ctr">
+    <section class="sel">
+      <select id="select">
+        <option disabled selected>load rom</option>
+      </select>
+    </section>
 
-        <button>a</button>
-        <button>s</button>
-        <button>d</button>
-        <button>d</button>
+    <section id="keypad" class="keypad">
+      <button>1</button>
+      <button>2</button>
+      <td><button>3</button></td>
+      <td><button>4</button></td>
 
-        <button>z</button>
-        <button>x</button>
-        <button>c</button>
-        <button>v</button>
-      </section>
-    </div>
-  </body>
+      <button>q</button>
+      <button>w</button>
+      <button>e</button>
+      <button>r</button>
+
+      <button>a</button>
+      <button>s</button>
+      <button>d</button>
+      <button>f</button>
+
+      <button>z</button>
+      <button>x</button>
+      <button>c</button>
+      <button>v</button>
+    </section>
+  </div>
+</body>
+
 </html>

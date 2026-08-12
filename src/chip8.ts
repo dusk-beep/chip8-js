@@ -47,6 +47,28 @@ class Chip8 {
   context: AudioContext;
   oscillator: OscillatorNode | null = null;
 
+  keyMap: Record<string, number> = {
+    "1": 0x1,
+    "2": 0x2,
+    "3": 0x3,
+    "4": 0xc,
+
+    q: 0x4,
+    w: 0x5,
+    e: 0x6,
+    r: 0xd,
+
+    a: 0x7,
+    s: 0x8,
+    d: 0x9,
+    f: 0xe,
+
+    z: 0xa,
+    x: 0x0,
+    c: 0xb,
+    v: 0xf,
+  };
+
   constructor(
     state: Chip8State = Chip8State.Running,
     cfg: Config,
@@ -307,7 +329,7 @@ class Chip8 {
 
     this.inst.opcode = this._fetch();
     // pre increment pc for the next instruction
-    this.debug();
+    // this.debug();
     this._increment_pc();
 
     //fill out the current instruction format
@@ -531,10 +553,7 @@ class Chip8 {
             if (!keyPressed) {
               this.machine.pc -= 2;
             } else {
-              if (this.keypad[key]) this.machine.pc -= 2;
-              else {
                 this.machine.V[this.inst.X] = key;
-              }
             }
             break;
           case 0x1e:
@@ -571,14 +590,14 @@ class Chip8 {
           case 0x55:
             //Stores from V0 to VX (including VX) in memory, starting at address I. The offset from I is increased by 1 for each value written, but I itself is left unmodified.[d][24]
 
-            for (let i = 0; i <= this.machine.V[this.inst.X]; i++) {
+            for (let i = 0; i <= this.inst.X; i++) {
               this.machine.ram[this.machine.I + i] = this.machine.V[i];
             }
             break;
 
           case 0x65:
             // Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified.[d
-            for (let i = 0; i <= this.machine.V[this.inst.X]; i++) {
+            for (let i = 0; i <= this.inst.X; i++) {
               this.machine.V[i] = this.machine.ram[this.machine.I + i];
             }
             break;
@@ -607,71 +626,43 @@ class Chip8 {
     this.machine.pc += 2;
   }
 
-  setupInputListeners() {
-    const buttons: NodeListOf<HTMLButtonElement> =
-      document.querySelectorAll("button");
-    if (buttons.length === 0) return;
 
-    const handleEvent = (
-      button: HTMLButtonElement,
-      eventType: "keydown" | "keyup",
-      event: Event
-    ) => {
-      //event.preventDefault(); // Prevent touch scrolling issues
-      this.handle_input(button, eventType);
-    };
+  setupInputListeners() {
+    const buttons =
+    document.querySelectorAll<HTMLButtonElement>("#keypad button");
+
+    console.log("buttons:", buttons.length);
 
     buttons.forEach(button => {
-      //button.addEventListener("mousedown", event =>
-      //  handleEvent(button, "keydown", event)
-      //);
-      //button.addEventListener("mouseup", event =>
-      //  handleEvent(button, "keyup", event)
-      //);
+      button.addEventListener("pointerdown", event => {
+        event.preventDefault();
+        button.setPointerCapture(event.pointerId);
+        this.handle_input(button, true);
+      });
 
-      button.addEventListener("touchstart", event =>
-        handleEvent(button, "keydown", event)
-      );
-      button.addEventListener("touchend", event =>
-        handleEvent(button, "keyup", event)
-      );
-      button.addEventListener("touchcancel", event =>
-        handleEvent(button, "keyup", event)
-      ); // Handles lost touches
+      button.addEventListener("pointerup", event => {
+        event.preventDefault();
+        this.handle_input(button, false);
+      });
+
+      button.addEventListener("pointercancel", () => {
+        this.handle_input(button, false);
+      });
     });
-  }
+}
 
-  handle_input(button: HTMLButtonElement, eventType: "keydown" | "keyup") {
-    if (!button) return;
+  handle_input(button: HTMLButtonElement, pressed: boolean) {
+    const key = button.textContent?.toLowerCase();
 
-    const keyMap: Record<string, number> = {
-      "1": 0x01,
-      "2": 0x02,
-      "3": 0x03,
-      "4": 0x0c,
-      q: 0x04,
-      w: 0x05,
-      e: 0x06,
-      r: 0x0d,
-      a: 0x07,
-      s: 0x08,
-      d: 0x09,
-      f: 0x0e,
-      z: 0x0a,
-      x: 0x00,
-      c: 0x0b,
-      v: 0x0f
-    };
+    if (key === undefined) return;
 
-    const value = button.textContent?.toLowerCase(); // Ensure lowercase consistency
-    if (value) {
-      const keyCode = keyMap[value];
+    const keyCode = this.keyMap[key];
 
-      if (keyCode !== undefined) {
-        this.keypad[keyCode] = eventType === "keydown";
-      }
-    }
-  }
+    if (keyCode === undefined) return;
+    console.log(keyCode)
+
+    this.keypad[keyCode] = pressed;
+}
 
   _fetch() {
     if (this.machine.pc > 4094) {
